@@ -1,4 +1,5 @@
 import React from 'react';
+import { Input, Button } from 'reactstrap';
 import authService from './api-authorization/AuthorizeService'
 
 const AddToken = (props) => {
@@ -44,8 +45,8 @@ const AddToken = (props) => {
 
     return (
         <div>
-            <input onChange={(e) => setInput(e.target)} />
-            <a className="btn" onClick={handleSubmitClick}>Add Token</a>
+            <Input onChange={(e) => setInput(e.target)} />
+            <Button onClick={handleSubmitClick} color="primary" outline>Text</Button>
         </div>
     );
 }

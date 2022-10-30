@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import authService from './api-authorization/AuthorizeService'
+import React from 'react';
+import { Button } from 'reactstrap';
+import authService from './api-authorization/AuthorizeService';
 
 const TokenInfo = (props) => {
-    const [deleted, setDeleted] = useState(false);
-
     /*const [items, setItems] = useState([]);
     // handle click event of the button to add item
     const addMoreItem = () => {
@@ -28,17 +27,16 @@ const TokenInfo = (props) => {
 
         alert("Server response: " + response.status + "; 204 - no content (success), 404 - not found");
 
-        //const data = await response.json();
-        setDeleted(true);
+        if (response.status == 204)
+            props.update();
     }
 
     //useEffect(async () => await loadingUsername(), []);
 
     return (
         <div>
-            {deleted ? <p><em>Deleted...</em></p>
-                : <p>YandexDirect API Token:<em>{props.yandexToken}</em></p>}
-            <a className="btn" onClick={deleteYandexToken}>Delete</a>
+            <p>YandexDirect API Token:<em>{props.yandexToken}</em></p>
+            <Button color='primary' onClick={deleteYandexToken}>Delete</Button>
         </div>
     );
 }

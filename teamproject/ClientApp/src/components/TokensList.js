@@ -1,27 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import authService from './api-authorization/AuthorizeService'
-import TokenInfo from './TokenInfo'
-import AddToken from './AddToken'
+import { Button } from 'reactstrap';
+import authService from './api-authorization/AuthorizeService';
+import TokenInfo from './TokenInfo';
+import AddToken from './AddToken';
 
 const TokensList = (props) => {
     const [loading, setLoading] = useState(true);
     const [tokens, setTokens] = useState([]);
-   
-
-    const renderTokensTable = (tokens) => {
-        return (
-            <table className='table table-striped' aria-labelledby="tabelLabel">
-            <thead>
-                <tr>
-                <th>Token Info</th>
-                </tr>
-            </thead>
-            <tbody>
-                    <tr> <td><AddToken /></td> </tr>
-                    {tokens.map(token => <tr> <td> <TokenInfo yandexToken={token}/> </td> </tr>)}
-            </tbody>
-            </table>);
-    }
 
     const loadTokens = async () => {
         const token = await authService.getAccessToken();
@@ -42,15 +27,32 @@ const TokensList = (props) => {
         setLoading(false);
     }
 
-    useEffect(async () => await loadTokens(), []);
+    //async функции нужно так обертывать в useEffect
+    useEffect(() => {
+        (async () => {
+            await loadTokens();
+        })();
+    }, []);
 
     return (
-      <div>
-        <h1 id="tabelLabel" >All of your YandexDirect tokens: </h1>
-        <p>This component demonstrates fetching data from the server.</p>
-        {loading ? <p><em>Loading...</em></p>
-      : renderTokensTable(tokens)}
-      </div>
+        <div>
+            <h1> Your YandexDirect accounts </h1>
+            <Button color='success' onClick={loadTokens}>Load Tokens</Button>
+            {loading ? <p><em>Loading...</em></p>
+                : 
+                <table className='table table-striped' aria-labelledby="tabelLabel">
+                    <thead>
+                        <tr>
+                            <th>Token Info</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr> <td><AddToken/></td> </tr>
+                        {tokens.map(token => <tr> <td> <TokenInfo update={loadTokens} yandexToken={token} /> </td> </tr>)}
+                    </tbody>
+                </table>
+                }
+        </div>
     );
 }
 
