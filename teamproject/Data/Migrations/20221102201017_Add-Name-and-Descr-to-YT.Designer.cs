@@ -10,15 +10,15 @@ using teamproject.Data;
 namespace teamproject.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20221028143552_ThirdMigr")]
-    partial class ThirdMigr
+    [Migration("20221102201017_Add-Name-and-Descr-to-YT")]
+    partial class AddNameandDescrtoYT
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.3")
+                .HasAnnotation("ProductVersion", "5.0.6")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("IdentityServer4.EntityFramework.Entities.DeviceFlowCodes", b =>
@@ -331,6 +331,12 @@ namespace teamproject.Data.Migrations
 
                     b.Property<string>("User_id")
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Short_name")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Token", "User_id");
 

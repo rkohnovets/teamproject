@@ -1,17 +1,8 @@
 import React from 'react';
-import { Button } from 'reactstrap';
+import { Input, Button, InputGroup, InputGroupText } from 'reactstrap';
 import authService from './api-authorization/AuthorizeService';
 
 const TokenInfo = (props) => {
-    /*const [items, setItems] = useState([]);
-    // handle click event of the button to add item
-    const addMoreItem = () => {
-        setItems(prevItems => [...prevItems, {
-            id: prevItems.length,
-            value: getRandomNumber()
-        }]);
-    }*/
-
     async function deleteYandexToken() {
         const yandexToken = props.yandexToken;
         const token = await authService.getAccessToken();
@@ -31,12 +22,14 @@ const TokenInfo = (props) => {
             props.update();
     }
 
-    //useEffect(async () => await loadingUsername(), []);
-
     return (
         <div>
-            <p>YandexDirect API Token:<em>{props.yandexToken}</em></p>
-            <Button color='primary' onClick={deleteYandexToken}>Delete</Button>
+            <InputGroup className="my-3">
+                <InputGroupText>
+                    YandexDirect API Token: {props.yandexToken}
+                </InputGroupText>
+                <Button className="block" color="primary" onClick={deleteYandexToken}> Delete </Button>
+            </InputGroup>
         </div>
     );
 }

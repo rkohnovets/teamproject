@@ -10,12 +10,17 @@ using teamproject.Data;
 using teamproject.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Authorization;
+using System.Net.Http;
+using Newtonsoft.Json.Linq;
+using System.Net.Http.Json;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace teamproject.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class YandexTokensController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -31,11 +36,36 @@ namespace teamproject.Controllers
 
         // GET: api/YandexTokens/1
         [HttpGet("{user_id}")]
-        public IEnumerable<string> GetYandexTokens(string user_id)
+        public IEnumerable<YandexToken> GetYandexTokens(string user_id)
         {
             //var clientFromRequest = _clientRequestParametersProvider.GetClientParameters(HttpContext, user_id);
 
-            return _context.YandexTokens.Where(yt => yt.User_id == user_id).Select(yt => yt.Token);
+            return _context.YandexTokens.Where(yt => yt.User_id == user_id);
+        }
+
+        // GET: api/YandexTokens/balance и в теле JSON со строкой
+        [HttpPost("balance")]
+        public async Task<string> GetBalanceByToken([FromBody] string token)
+        {
+            var client = new HttpClient();
+            
+            var str = @" {
+                ""method"": ""AccountManagement"",
+                ""token"": """ + token + @""",
+                ""param"": {
+                    ""Action"": ""Get"",
+                    ""SelectionCriteria"": {
+                        ""Logins"": [],
+                        ""AccountIDS"": []
+                    }
+                }
+            }";
+
+            var response = await client.PostAsync(@"https://api.direct.yandex.ru/live/v4/json/", new StringContent(str, Encoding.UTF8, "application/json"));
+
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            return responseString;
         }
         /*
         public async Task<ActionResult<IEnumerable<YandexToken>>> GetYandexTokens(string user_id)

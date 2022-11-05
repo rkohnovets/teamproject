@@ -1,52 +1,62 @@
 import React from 'react';
-import { Input, Button } from 'reactstrap';
+import { Input, Button, InputGroup, InputGroupText } from 'reactstrap';
 import authService from './api-authorization/AuthorizeService'
 
 const AddToken = (props) => {
 
-    /*const [items, setItems] = useState([]);
-    // handle click event of the button to add item
-    const addMoreItem = () => {
-        setItems(prevItems => [...prevItems, {
-            id: prevItems.length,
-            value: getRandomNumber()
-        }]);
-    }*/
+    let shortName = "";
+    const setShortName = (e) => shortName = e.value;
 
-    let input = null;
-    const setInput = (e) => input = e.value;
+    let tokenToAdd = "";
+    const setTokenToAdd = (e) => tokenToAdd = e.value;
 
     let handleSubmitClick = async () => {
         try {
             const token = await authService.getAccessToken();
             const user = await authService.getUser();
+            const user_id = user.sub;
 
-            if (!input || input.length === 0)
+            if (!shortName || shortName.length === 0)
+                throw new Error("");
+            if (!tokenToAdd || tokenToAdd.length === 0)
                 throw new Error("");
 
             const response = await fetch(`api/YandexTokens`, {
                 method: 'POST',
                 headers: !token ? {} : { 'Authorization': `Bearer ${token}`,
-                    "Content-Type": "application/json" },
-                body: JSON.stringify({ 'Token': input, 'User_id': user.sub })
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ 'Token': tokenToAdd, 'User_id': user_id })
             });
-            status = response.status;
-            alert("Server response status: " + status);
 
-            //const data = await response.json();
+            //status = response.status;
+            //alert("Server response status: " + status);
+            //alert(input);
 
-            alert(input);
+            if (response.status == 200)
+                props.update();
         } catch(err) {
-            alert("Error!" + err);
+            alert(err);
         }
     }
 
-    //useEffect(async () => await loadingUsername(), []);
-
     return (
         <div>
-            <Input onChange={(e) => setInput(e.target)} />
-            <Button onClick={handleSubmitClick} color="primary" outline>Text</Button>
+            <a href="https://oauth.yandex.ru/authorize?response_type=token&client_id=0765fa3b9c0d4fd79e9cf0e1181ff263" target="_blank" class="link-primary">Primary link</a>
+
+            <InputGroup>
+                <InputGroupText>
+                    Short name
+                </InputGroupText>
+                <Input onChange={(e) => setShortName(e.target)} placeholder="For example, account 1" />
+            </InputGroup>
+            <InputGroup className="my-3">
+                <InputGroupText>
+                    YandexDirect API Token
+                </InputGroupText>
+                <Input onChange={(e) => setTokenToAdd(e.target)} />
+                <Button color="primary" onClick={handleSubmitClick}> Add </Button>
+            </InputGroup>
         </div>
     );
 }

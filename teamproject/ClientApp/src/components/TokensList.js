@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from 'reactstrap';
+import React, { useState, useEffect, Fragment } from 'react';
 import authService from './api-authorization/AuthorizeService';
 import TokenInfo from './TokenInfo';
 import AddToken from './AddToken';
@@ -29,29 +28,26 @@ const TokensList = (props) => {
 
     //async функции нужно так обертывать в useEffect
     useEffect(() => {
-        (async () => {
-            await loadTokens();
-        })();
+        (async () => { await loadTokens(); })();
     }, []);
 
     return (
         <div>
-            <h1> Your YandexDirect accounts </h1>
-            <Button color='success' onClick={loadTokens}>Load Tokens</Button>
-            {loading ? <p><em>Loading...</em></p>
-                : 
-                <table className='table table-striped' aria-labelledby="tabelLabel">
-                    <thead>
-                        <tr>
-                            <th>Token Info</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr> <td><AddToken/></td> </tr>
-                        {tokens.map(token => <tr> <td> <TokenInfo update={loadTokens} yandexToken={token} /> </td> </tr>)}
-                    </tbody>
-                </table>
-                }
+            <h1> Your YandexDirect accounts </h1> -- TODO aside button ADD NEW
+
+            {loading ? <p><em>Loading...</em></p> :
+                <Fragment>
+                    <AddToken update={loadTokens}/>
+                    <h1>Token Info</h1>
+                            {tokens.map(token => <tr> <td>
+                                <div className="d-flex bg-info m-2 p-2 justify-content-between">
+                                    <div className="d-inline p-2 m-2 bg-success text-white">d-inline</div>
+                                    <div className="d-inline p-2 m-2 bg-dark text-white">d-inline</div>
+                                    <TokenInfo update={loadTokens} yandexToken={token} />
+                                </div>
+                            </td> </tr>)}
+                </Fragment>}
+
         </div>
     );
 }

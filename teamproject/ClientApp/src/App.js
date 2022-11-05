@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Route } from 'react-router';
 import { Layout } from './components/Layout';
-import { Home } from './components/Home';
+import Home from './components/Home';
 import { FetchData } from './components/FetchData';
 import TokensList from './components/TokensList';
 import { Counter } from './components/Counter';
@@ -10,13 +10,13 @@ import ApiAuthorizationRoutes from './components/api-authorization/ApiAuthorizat
 import { ApplicationPaths } from './components/api-authorization/ApiAuthorizationConstants';
 import './index.css';
 
+import NewTokensList from './components/NewTokensList';
+
 const App = (props) => {
     return (
         <Layout>
         <Route exact path='/' component={Home} />
-        <Route path='/counter' component={Counter} />
-        <AuthorizeRoute path='/fetch-data' component={FetchData} />
-        <AuthorizeRoute path='/tokens-list' component={TokensList} />
+        <AuthorizeRoute path='/new-tokens-list' component={NewTokensList} />
         <Route path={ApplicationPaths.ApiAuthorizationPrefix} component={ApiAuthorizationRoutes} />
         </Layout>
     );
