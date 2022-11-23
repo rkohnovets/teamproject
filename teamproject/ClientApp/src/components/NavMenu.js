@@ -35,7 +35,7 @@ export class NavMenu extends Component {
                   <NavLink tag={Link} className="text-dark" to="/">Home</NavLink>
                 </NavItem>
                 <NavItem>
-                  <NavLink tag={Link} className="text-dark" to="/new-tokens-list">YD Balances</NavLink>
+                  <NavLink tag={Link} className="text-dark" to="/tokens-list">Yandex Direct Balances</NavLink>
                 </NavItem>
                 <LoginMenu>
                 </LoginMenu>

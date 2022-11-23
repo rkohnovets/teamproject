@@ -1,29 +1,111 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import authService from './api-authorization/AuthorizeService';
 import TokenInfo from './TokenInfo';
+import Loader from './Loader';
 import AddToken from './AddToken';
 
 const TokensList = (props) => {
     const [loading, setLoading] = useState(true);
     const [tokens, setTokens] = useState([]);
 
+    const [balances, setBalances] = useState(new Map());
+
     const loadTokens = async () => {
-        const token = await authService.getAccessToken();
-        const user = await authService.getUser();
-        const user_id = user.sub;
+        try {
+            const token = await authService.getAccessToken();
+            const user = await authService.getUser();
+            const user_id = user.sub;
 
-        const response = await fetch(`api/YandexTokens/${user_id}`, {
-            headers: !token ? {} : { 'Authorization': `Bearer ${token}` }
-        });
+            const response = await fetch(`api/YandexTokens/${user_id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-        alert(response.status);
+            if (response.status == 401) {
+                await authService.signIn();
 
-        const data = await response.json();
+                alert("session expired, trying to login");
 
-        alert(data);
+                handleSubmitClick();
+            } else {
+                const data = await response.json();
 
-        setTokens(data);
-        setLoading(false);
+                setTokens(data);
+
+                for (let yt of data) {
+                    if (!balances.has(yt.token)) {
+                        await updateBalance(yt.token);
+                    }
+                }
+
+                setLoading(false);
+            }
+        } catch (err) {
+            alert(err);
+        }
+    }
+
+    const updateBalance = async (yandexAPIToken) => {
+        try {
+            const token = await authService.getAccessToken();
+
+            const response = await fetch(`api/YandexTokens/balance`, {
+                method: "POST",
+                headers: !token ? {} : {
+                    'Authorization': `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(yandexAPIToken)
+            });
+
+            if (response.status == 401) {
+                await authService.signIn();
+
+                alert("session expired, trying to login");
+
+                await updateBalance(yandexAPIToken);
+            } else {
+                let data = await response.json();
+                
+                if (data.data) {
+                    let sum = 0;
+                    let currency = data.data.Accounts[0].Currency;
+
+                    for (let i = 0; i < data.data.Accounts.length; i++) {
+                        //alert(data.data.Accounts[i].Amount);
+                        sum += parseFloat(data.data.Accounts[i].Amount);
+                    }
+
+                    setBalances(balances.set(yandexAPIToken, { amount: sum, currency: currency }));
+                } else if (data.error_str) {
+                    //throw "YandexDirect: " + data.error_str;
+
+                    let str = data.error_str;
+
+                    if (data.error_code == 53) {
+                        str += " (invalid token)";
+                    }
+
+                    setBalances(balances.set(yandexAPIToken, { amount: str, currency: "" }));
+                } else {
+                    setBalances(balances.set(yandexAPIToken, { amount: "Unrecognized error", currency: "" }));
+                    //throw "unrecognized error (in browser)";
+                }
+
+                //alert("Updated balance for " + yandexAPIToken);
+            }
+        } catch (err) {
+            alert(err);
+        }
+    }
+
+    const deleteToken = (token) => {
+        setTokens(tokens.filter(t => t.token != token));
+    }
+
+    const addToken = async (yandexToken) => {
+        await updateBalance(yandexToken.token);
+
+        setTokens([...tokens, yandexToken]);
     }
 
     //async функции нужно так обертывать в useEffect
@@ -33,21 +115,22 @@ const TokensList = (props) => {
 
     return (
         <div>
-            <h1> Your YandexDirect accounts </h1> -- TODO aside button ADD NEW
+            <div className="d-flex justify-content-between">
+                <div className="d-inline-block fs-1"> Your YandexDirect accounts </div>
+                <AddToken onAdd={addToken} />
+            </div>
 
-            {loading ? <p><em>Loading...</em></p> :
-                <Fragment>
-                    <AddToken update={loadTokens}/>
-                    <h1>Token Info</h1>
-                            {tokens.map(token => <tr> <td>
-                                <div className="d-flex bg-info m-2 p-2 justify-content-between">
-                                    <div className="d-inline p-2 m-2 bg-success text-white">d-inline</div>
-                                    <div className="d-inline p-2 m-2 bg-dark text-white">d-inline</div>
-                                    <TokenInfo update={loadTokens} yandexToken={token} />
-                                </div>
-                            </td> </tr>)}
+            {loading ? <div className="d-flex justify-content-center"><Loader /></div> :
+                <Fragment> 
+                    {tokens.map((yt) =>
+                        <Fragment key={yt.token}>
+                            <TokenInfo onDelete={() => deleteToken(yt.token)}
+                                yandexToken={{ token: yt.token, shortName: yt.short_name, description: yt.description }}
+                                amount={balances.has(yt.token) ? balances.get(yt.token).amount : "loading"}
+                                currency={balances.has(yt.token) ? balances.get(yt.token).currency : "loading"} />
+                        </Fragment>
+                    )}
                 </Fragment>}
-
         </div>
     );
 }
