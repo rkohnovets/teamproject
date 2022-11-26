@@ -1,5 +1,5 @@
 ﻿import React, { useState, Fragment } from 'react';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter, FormGroup, Input, Label } from 'reactstrap';
 import authService from './api-authorization/AuthorizeService';
 import ButtonWithLoader from './ButtonWithLoader';
 
@@ -12,14 +12,11 @@ const AddToken = (props) => {
 
     const closeBtn = (<button type="button" onClick={toggle} class="btn-close" aria-label="Close"></button>);
 
-    let shortName = "";
-    const setShortName = (e) => shortName = e.value;
+    const [tokenToAdd, setTokenToAdd] = useState("");
 
-    let tokenToAdd = "";
-    const setTokenToAdd = (e) => tokenToAdd = e.value;
+    const [description, setDescription] = useState("");
 
-    let description = "";
-    const setDescription = (e) => description = e.value;
+    const [forSandbox, setForSandbox] = useState("false");
 
     let handleSubmitClick = async () => {
         try {
@@ -27,12 +24,10 @@ const AddToken = (props) => {
             const user = await authService.getUser();
             const user_id = user.sub;
 
-            if (!shortName || shortName.length === 0)
-                throw new Error("Short name cannot be empty!");
             if (!tokenToAdd || tokenToAdd.length === 0)
                 throw new Error("Yandex Direct API token cannot be empty!");
             if (!description)
-                description = '';
+                setDescription("");
 
             const response = await fetch(`api/YandexTokens`, {
                 method: 'POST',
@@ -43,7 +38,7 @@ const AddToken = (props) => {
                 body: JSON.stringify({
                     'Token': tokenToAdd,
                     'User_id': user_id,
-                    'Short_name': shortName,
+                    "In_sandbox": forSandbox === "true",
                     'Description': description
                 })
             });
@@ -53,18 +48,18 @@ const AddToken = (props) => {
 
                 await authService.signIn();
 
-                handleSubmitClick();
+                await handleSubmitClick();
             }
             else {
                 if (response.status == 200) {
                     await props.onAdd({
                         'token': tokenToAdd,
                         'user_id': user_id,
-                        'short_name': shortName,
+                        "in_sandbox": forSandbox === "true",
                         'description': description
                     });
                 } else {
-                    throw "error, server response " + response.status;
+                    throw "Error, server response: " + response.status;
                 }
                 toggle();
             }
@@ -79,28 +74,28 @@ const AddToken = (props) => {
                 Add new
             </Button>
             <Modal isOpen={modal} toggle={toggle}>
-                <ModalHeader toggle={toggle} close={closeBtn}>Add new YandexDirect account</ModalHeader>
-                <ModalBody>
-                    <div class="mb-3">
-                        <label class="form-label">Short Name</label>
-                        <input class="form-control" onChange={(e) => setShortName(e.target)} placeholder="for example, account 1"/>
-                    </div>
-
-                    <div class="mb-3">
+                <ModalHeader className="py-1" toggle={toggle} close={closeBtn}>Add new YandexDirect account</ModalHeader>
+                <ModalBody className="py-1">
+                    <div class="my-1">
                         <label class="form-label">Description (optional)</label>
-                        <textarea class="form-control" onChange={(e) => setDescription(e.target)} rows="3"></textarea>
+                        <textarea class="form-control" onChange={(e) => setDescription(e.target.value)} rows="3"></textarea>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="my-1">
                         <label class="form-label">Get Yandex Direct API token here:{' '}
                             <a className="link-primary"
                             href="https://oauth.yandex.ru/authorize?response_type=token&client_id=0765fa3b9c0d4fd79e9cf0e1181ff263"
                             target="_blank">link opens in new tab</a>
                         </label>
-                        <input class="form-control" onChange={(e) => setTokenToAdd(e.target)} placeholder="Yandex Direct API token" />
+                        <input class="form-control" onChange={(e) => setTokenToAdd(e.target.value)} placeholder="Yandex Direct API token" />
+                    </div>
+
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" onChange={(e) => setForSandbox(e.target.checked + "")} />
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Sandbox ({forSandbox})</label>
                     </div>
                 </ModalBody>
-                <ModalFooter>
+                <ModalFooter className="py-1">
                     <ButtonWithLoader onClick={handleSubmitClick} text="Submit" loadingText="Submitting..."/>
                     {' '}
                     <Button color="secondary" onClick={toggle}>

@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using teamproject.Data;
 
 namespace teamproject.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221126103857_updated-yandex-token")]
+    partial class updatedyandextoken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -330,13 +332,13 @@ namespace teamproject.Data.Migrations
                     b.Property<string>("User_id")
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<bool>("In_sandbox")
+                    b.Property<bool>("InSandbox")
                         .HasColumnType("bit");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("Token", "User_id", "In_sandbox");
+                    b.HasKey("Token", "User_id", "InSandbox");
 
                     b.ToTable("YandexTokens");
                 });

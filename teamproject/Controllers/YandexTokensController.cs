@@ -15,20 +15,42 @@ using Newtonsoft.Json.Linq;
 using System.Net.Http.Json;
 using Newtonsoft.Json;
 using System.Text;
+using System.Net.Http.Headers;
+using System.Text.Json.Nodes;
+using System.Text.Json;
 
 namespace teamproject.Controllers
 {
     [Authorize]
     [ApiController]
+    //[Route("api/[controller]")]
+    [Route("api/sandbox/yandextokens")]
+    public class YandexTokensSandboxController : YandexTokensController
+    {
+        public YandexTokensSandboxController(ApplicationDbContext context
+             , IClientRequestParametersProvider clientRequestParametersProvider)
+            : base(context, clientRequestParametersProvider)
+        {
+            yandex_direct_api_v4 = @"https://api-sandbox.direct.yandex.ru/live/v4/json/";
+            yandex_direct_api_v5 = @"https://api-sandbox.direct.yandex.com/json/v5/";
+        }
+    }
+
+
+    [Authorize]
+    [ApiController]
     [Route("api/[controller]")]
     public class YandexTokensController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IClientRequestParametersProvider _clientRequestParametersProvider;
+        protected readonly ApplicationDbContext _context;
+        protected readonly IClientRequestParametersProvider _clientRequestParametersProvider;
+
+        protected string yandex_direct_api_v4 = @"https://api.direct.yandex.ru/live/v4/json/";
+        protected string yandex_direct_api_v5 = @"https://api.direct.yandex.com/json/v5/";
+        //DbSet<YandexToken> tokensStorage;
 
         public YandexTokensController(ApplicationDbContext context
-             , IClientRequestParametersProvider clientRequestParametersProvider
-            )
+             , IClientRequestParametersProvider clientRequestParametersProvider)
         {
             _clientRequestParametersProvider = clientRequestParametersProvider;
             _context = context;
@@ -38,18 +60,17 @@ namespace teamproject.Controllers
         [HttpGet("{user_id}")]
         public IEnumerable<YandexToken> GetYandexTokens(string user_id)
         {
-            //var clientFromRequest = _clientRequestParametersProvider.GetClientParameters(HttpContext, user_id);
-
             return _context.YandexTokens.Where(yt => yt.User_id == user_id);
         }
 
-        // GET: api/YandexTokens/balance и в теле JSON со строкой
+        // POST: api/YandexTokens/balance и в теле JSON со строкой
         [HttpPost("balance")]
         public async Task<string> GetBalanceByToken([FromBody] string token)
         {
             var client = new HttpClient();
             
-            var str = @" {
+            var str = 
+            @" {
                 ""method"": ""AccountManagement"",
                 ""token"": """ + token + @""",
                 ""param"": {
@@ -61,70 +82,105 @@ namespace teamproject.Controllers
                 }
             }";
 
-            var response = await client.PostAsync(@"https://api.direct.yandex.ru/live/v4/json/", new StringContent(str, Encoding.UTF8, "application/json"));
+            var response = await client.PostAsync(yandex_direct_api_v4, new StringContent(str, Encoding.UTF8, "application/json"));
 
             var responseString = await response.Content.ReadAsStringAsync();
 
             return responseString;
         }
-        /*
-        public async Task<ActionResult<IEnumerable<YandexToken>>> GetYandexTokens(string user_id)
+
+        [HttpPost("accountinfo")]
+        public async Task<string> GetAccountInfo([FromBody] string token)
         {
-            //var tokens = _context.YandexTokens.Where(yt => yt.User_id == user_id);
+            var str =
+                @"{
+                  ""method"": ""get"",
+                  ""params"": {
+                    ""FieldNames"": [""Login"", ""ClientId"", ""ClientInfo""]
+                  }
+                }";
 
+            var client = new HttpClient();
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(yandex_direct_api_v5 + "clients"),
+                Method = HttpMethod.Post,
+                Content = new StringContent(str, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Authorization = AuthenticationHeaderValue.Parse($"Bearer {token}");
+            var response = await client.SendAsync(request);
 
-            return await _context.YandexTokens.ToListAsync();
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            return responseString;
         }
-        */
 
-        // GET: api/YandexTokens/1/1
-        /*
-        [HttpGet("{user_id}/{id}")]
-        public async Task<ActionResult<YandexToken>> GetYandexToken(string user_id, string id)
+        // POST: api/YandexTokens/agencyclients и в теле JSON со строкой
+        [HttpPost("agencyclients")]
+        public async Task<string> GetAgencyClients([FromBody] string token)
         {
-            var yandexToken = await _context.YandexTokens.FindAsync(id);
+            var str =
+                @"{
+                  ""method"": ""get"",
+                  ""params"": {
+                    ""SelectionCriteria"": {  },
+                    ""FieldNames"": [ ""ClientInfo"", ""Login"" ]
+                  }
+                }";
 
-            if (yandexToken == null)
+            var client = new HttpClient();
+            var request = new HttpRequestMessage()
             {
-                return NotFound();
-            }
+                RequestUri = new Uri(yandex_direct_api_v5 + "agencyclients"),
+                Method = HttpMethod.Post,
+                Content = new StringContent(str, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Authorization = AuthenticationHeaderValue.Parse($"Bearer {token}");
+            var response = await client.SendAsync(request);
 
-            return yandexToken;
-        } */
+            var responseString = await response.Content.ReadAsStringAsync();
 
+            AgencyClients agencyClientsResponse = JsonConvert.DeserializeObject<AgencyClients>(responseString);
+            agencyClientsResponse.is_agency = agencyClientsResponse.error == null;
 
-        // PUT: api/YandexTokens/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        /*
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutYandexToken(string id, YandexToken yandexToken)
-        {
-            if (id != yandexToken.Token)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(yandexToken).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!YandexTokenExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return JsonConvert.SerializeObject(agencyClientsResponse);
         }
-        */
+
+        // POST: api/YandexTokens/agencyclients/balances
+        [HttpPost("agencyclients/balances")]
+        public async Task<string> GetAgencyClientsBalances([FromBody] AgencyClientsBalancesRequest balancesRequest)
+        {
+            var logins = new StringBuilder();
+            foreach (var login in balancesRequest.logins)
+                logins.Append(@"""" + login + @""", ");
+            logins.Remove(logins.Length - 2, 2);
+
+            var str =
+            @" {
+                ""method"": ""AccountManagement"",
+                ""token"": """ + balancesRequest.token + @""",
+                ""param"": {
+                    ""Action"": ""Get"",
+                    ""SelectionCriteria"": {
+                        ""Logins"": [" + logins.ToString() + @"]
+                    }
+                }
+            }";
+
+            var client = new HttpClient();
+            var request = new HttpRequestMessage()
+            {
+                RequestUri = new Uri(yandex_direct_api_v4),
+                Method = HttpMethod.Post,
+                Content = new StringContent(str, Encoding.UTF8, "application/json")
+            };
+
+            var response = await client.SendAsync(request);
+
+            var responseString = await response.Content.ReadAsStringAsync();
+
+            return responseString;
+        }
 
         // POST: api/YandexTokens
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -140,7 +196,7 @@ namespace teamproject.Controllers
             }
             catch (DbUpdateException)
             {
-                if (YandexTokenExists(yandexToken.User_id, yandexToken.Token))
+                if (YandexTokenExists(yandexToken.User_id, yandexToken.Token, yandexToken.In_sandbox))
                 {
                     return Conflict();
                 }
@@ -150,7 +206,7 @@ namespace teamproject.Controllers
                 }
             }
 
-            return Ok(yandexToken); //CreatedAtAction("GetYandexToken", new { id = yandexToken.Token }, yandexToken);
+            return Ok(yandexToken);
         }
 
         // DELETE: api/YandexTokens/1/1
@@ -176,9 +232,9 @@ namespace teamproject.Controllers
             return _context.Users.FirstOrDefault(u => u.Id == user_id) != null;
         }
 
-        private bool YandexTokenExists(string user_id, string token)
+        private bool YandexTokenExists(string user_id, string token, bool inSandbox)
         {
-            return _context.YandexTokens.Any(e => e.User_id == user_id && e.Token == token);
+            return _context.YandexTokens.Any(e => e.User_id == user_id && e.Token == token && e.In_sandbox == inSandbox);
         }
     }
 }

@@ -17,15 +17,14 @@ namespace teamproject.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<YandexToken>().HasKey(t => new { t.Token, t.User_id });
+            modelBuilder.Entity<YandexToken>().HasKey(t => new { t.Token, t.User_id, t.In_sandbox });
         }
 
         public ApplicationDbContext(
             DbContextOptions options,
             IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {
-            //Database.EnsureDeleted();   // удаляем бд со старой схемой
-            //Database.EnsureCreated();   // создаем бд с новой схемой
+            //Database.EnsureCreated();   // если БД не создана то создаём её
         }
     }
 }
