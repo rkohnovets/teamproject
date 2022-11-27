@@ -90,11 +90,9 @@ const TokensList = (props) => {
             } else {
                 let data = await response.json();
 
-                if (data.error) {
-                    alert("(updateBalance, in checking is agency or not) Error from Yandex Direct server("
-                        + data.error.error_code + "): (" + data.error.error_string
-                        + ") " + data.error.error_detail);
-                } else if (data.is_agency) {
+                // проверка на ошибку не нужна, is_agency будет в любом случае и покажет,
+                // если true, то это агенство, если false - то это или обычный аккаунт, или токен не походит
+                if (data.is_agency) {
 
                     let logins = [];
                     for (let i = 0; i < data.result.Clients.length; i++) {
@@ -210,7 +208,7 @@ const TokensList = (props) => {
     return (
         <div>
             <div className="d-flex justify-content-between">
-                <div className="d-inline-block fs-1"> Your Yandex Direct accounts ({tokens.length}) </div>
+                <div className="d-inline-block fs-1"> Your Yandex Direct accounts </div>
                 <AddToken onAdd={addToken} />
             </div>
 

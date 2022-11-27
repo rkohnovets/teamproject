@@ -78,7 +78,7 @@ const AddToken = (props) => {
                 <ModalBody className="py-1">
                     <div class="my-1">
                         <label class="form-label">Description (optional)</label>
-                        <textarea class="form-control" onChange={(e) => setDescription(e.target.value)} rows="3"></textarea>
+                        <textarea class="form-control" value={description} onChange={(e) => setDescription(e.target.value)} rows="3"></textarea>
                     </div>
 
                     <div class="my-1">
@@ -87,12 +87,12 @@ const AddToken = (props) => {
                             href="https://oauth.yandex.ru/authorize?response_type=token&client_id=0765fa3b9c0d4fd79e9cf0e1181ff263"
                             target="_blank">link opens in new tab</a>
                         </label>
-                        <input class="form-control" onChange={(e) => setTokenToAdd(e.target.value)} placeholder="Yandex Direct API token" />
+                        <input class="form-control" value={tokenToAdd} onChange={(e) => setTokenToAdd(e.target.value)} placeholder="Yandex Direct API token" />
                     </div>
 
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" onChange={(e) => setForSandbox(e.target.checked + "")} />
-                        <label class="form-check-label" for="flexSwitchCheckDefault">Sandbox ({forSandbox})</label>
+                        <input class="form-check-input" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked={forSandbox === "true"} onChange={(e) => setForSandbox(e.target.checked + "")} />
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Sandbox</label>
                     </div>
                 </ModalBody>
                 <ModalFooter className="py-1">
